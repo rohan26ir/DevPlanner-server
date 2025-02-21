@@ -46,6 +46,23 @@ async function run() {
       res.json(result);
     });
     
+    // Get Tasks
+    app.get('/tasks', async (req, res) => {
+      const tasks = await taskCollection.find().toArray();
+      res.json(tasks);
+    });
+
+    // Update Task
+    app.put('/tasks/:id', async (req, res) => {
+      const { id } = req.params;
+      const updatedTask = req.body;
+      const result = await taskCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedTask }
+      );
+      res.json(result);
+    });
+
 
     
     
