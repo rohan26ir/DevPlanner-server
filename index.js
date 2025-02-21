@@ -22,59 +22,91 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Root Route - Check if API is Running
+app.get("/", (req, res) => {
+  res.send("DevPlanner API is running...");
+});
+
 async function run() {
   try {
-    // await client.connect();
-    // console.log("Connected to MongoDB");
+    await client.connect();
 
     const database = client.db('DevPlanner');
     const UserCollection = database.collection('Users');
     const taskCollection = database.collection('Tasks');
 
-    // Post User
+    
+    // Post User (Store user details on first login)
+  
     app.post('/users', async (req, res) => {
-      const newUser = req.body;
-      const result = await UserCollection.insertOne(newUser);
-      res.json(result);
+      try {
+        const { uid, name, email, photoURL } = req.body;
+
+        // Check if user exists
+        const existingUser = await UserCollection.findOne({ uid });
+
+        if (existingUser) {
+          return res.status(200).json({ message: "User already exists" });
+        }
+
+        // Insert new user
+        const newUser = { uid, name, email, photoURL };
+        const result = await UserCollection.insertOne(newUser);
+        res.status(201).json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
-    
     // Add Task
     app.post('/tasks', async (req, res) => {
-      const newTask = req.body;
-      const result = await taskCollection.insertOne(newTask);
-      res.json(result);
+      try {
+        const newTask = req.body;
+        const result = await taskCollection.insertOne(newTask);
+        res.status(201).json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
-    
+
     // Get Tasks
     app.get('/tasks', async (req, res) => {
-      const tasks = await taskCollection.find().toArray();
-      res.json(tasks);
+      try {
+        const tasks = await taskCollection.find().toArray();
+        res.status(200).json(tasks);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
     // Update Task
     app.put('/tasks/:id', async (req, res) => {
-      const { id } = req.params;
-      const updatedTask = req.body;
-      const result = await taskCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedTask }
-      );
-      res.json(result);
+      try {
+        const { id } = req.params;
+        const updatedTask = req.body;
+        const result = await taskCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedTask }
+        );
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
     // Delete Task
     app.delete('/tasks/:id', async (req, res) => {
-      const { id } = req.params;
-      const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
-      res.json(result);
+      try {
+        const { id } = req.params;
+        const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
     });
 
-
-    
-    
   } catch (error) {
-    console.error(error);
+    console.error("Error connecting to MongoDB:", error);
   }
 }
 
