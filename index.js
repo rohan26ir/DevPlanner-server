@@ -24,8 +24,8 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
-    console.log("Connected to MongoDB");
+    // await client.connect();
+    // console.log("Connected to MongoDB");
 
     const database = client.db('DevPlanner');
     const UserCollection = database.collection('Users');
