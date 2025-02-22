@@ -140,15 +140,16 @@ async function run() {
       }
     });
 
-    // 🔹 Add a Task
+    // Add a Task (Prevent Duplicates)
     app.post("/tasks", async (req, res) => {
       try {
-        const newTask = req.body;
-        if (!newTask.userEmail || !newTask.taskName) {
-          return res.status(400).json({ message: "User email and task name are required" });
-        }
+        const { userEmail, taskName, description, category } = req.body;
+        if (!userEmail || !taskName) return res.status(400).json({ message: "User email and task name are required" });
 
-        const result = await taskCollection.insertOne(newTask);
+        const existingTask = await taskCollection.findOne({ userEmail, taskName });
+        if (existingTask) return res.status(400).json({ message: "Task already exists" });
+
+        const result = await taskCollection.insertOne({ userEmail, taskName, description, category });
         res.status(201).json(result);
       } catch (error) {
         console.error("❌ Error adding task:", error);
