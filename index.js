@@ -59,7 +59,7 @@ async function run() {
         const users = await userCollection.find().toArray();
         res.status(200).json(users);
       } catch (error) {
-        console.error("❌ Error fetching users:", error);
+        console.error("Error fetching users:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
@@ -67,15 +67,16 @@ async function run() {
     // 🔹 Add a Task
     app.post("/tasks", async (req, res) => {
       try {
-        const newTask = req.body;
-        if (!newTask.userEmail || !newTask.taskName) {
-          return res.status(400).json({ message: "User email and task name are required" });
+        const { title, description, category, userEmail } = req.body;
+        if (!userEmail || !title) {
+          return res.status(400).json({ message: "User email and task title are required" });
         }
 
+        const newTask = { title, description, category, userEmail };
         const result = await taskCollection.insertOne(newTask);
         res.status(201).json(result);
       } catch (error) {
-        console.error("❌ Error adding task:", error);
+        console.error("Error adding task:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
@@ -91,12 +92,12 @@ async function run() {
         const tasks = await taskCollection.find({ userEmail }).toArray();
         res.status(200).json(tasks);
       } catch (error) {
-        console.error("❌ Error fetching tasks:", error);
+        console.error("Error fetching tasks:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
 
-    // 🔹 Update Task
+    // Update Task
     app.put("/tasks/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -105,41 +106,29 @@ async function run() {
           { _id: new ObjectId(id) },
           { $set: updatedTask }
         );
-
-        if (result.modifiedCount === 0) {
-          return res.status(404).json({ message: "Task not found or not modified" });
-        }
-
         res.json(result);
       } catch (error) {
-        console.error("❌ Error updating task:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
 
-    // 🔹 Delete Task
+    // Delete Task
     app.delete("/tasks/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
-
-        if (result.deletedCount === 0) {
-          return res.status(404).json({ message: "Task not found" });
-        }
-
         res.json(result);
       } catch (error) {
-        console.error("❌ Error deleting task:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
 
     // Default Route
     app.get("/", (req, res) => {
-      res.send("🚀 DevPlanner server is running");
+      res.send("DevPlanner server is running");
     });
   } catch (error) {
-    console.error("❌ Error connecting to MongoDB:", error);
+    console.error("Error connecting to MongoDB:", error);
   }
 }
 run().catch(console.dir);
