@@ -8,13 +8,6 @@
   ],
   "routes": [
     {
-<<<<<<< HEAD
-      "src": "/api/(.*)",
-      "dest": "index.js"
-    }
-  ]
-}
-=======
       "src": "/(.*)",
       "dest": "index.js",
       "methods": [
@@ -28,4 +21,3 @@
     }
   ]
 }
->>>>>>> 2f26930 (update commit)
