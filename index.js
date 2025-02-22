@@ -25,13 +25,13 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
 
     const database = client.db("DevPlanner");
     const userCollection = database.collection("Users");
     const taskCollection = database.collection("Tasks");
 
-    // 🔹 Add a User
+    // Add a User
     app.post("/users", async (req, res) => {
       try {
         const { name, email, photoUrl } = req.body;
@@ -53,7 +53,7 @@ async function run() {
       }
     });
 
-    // 🔹 Fetch All Users
+    // Fetch All Users
     app.get("/users", async (req, res) => {
       try {
         const users = await userCollection.find().toArray();
@@ -64,7 +64,7 @@ async function run() {
       }
     });
 
-    // 🔹 Add a Task
+    // Add a Task
     app.post("/tasks", async (req, res) => {
       try {
         const { title, description, category, userEmail } = req.body;
@@ -81,7 +81,7 @@ async function run() {
       }
     });
 
-    // 🔹 Fetch Tasks by User
+    // Fetch Tasks by User
     app.get("/tasks", async (req, res) => {
       try {
         const { userEmail } = req.query;
