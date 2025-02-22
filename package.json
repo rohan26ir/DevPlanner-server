@@ -1,8 +1,16 @@
 {
+<<<<<<< HEAD
   "name": "devplanner-server",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+=======
+  "name": "gameinsight-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+>>>>>>> 2f26930 (update commit)
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,6 +18,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+<<<<<<< HEAD
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -18,5 +27,12 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
+=======
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "install": "^0.13.0",
+    "mongodb": "^6.11.0"
+>>>>>>> 2f26930 (update commit)
   }
 }
