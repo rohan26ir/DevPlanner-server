@@ -1,60 +1,78 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.8c67l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
 });
 
 async function run() {
   try {
-    console.log("Connected to MongoDB");
-    const db = client.db("DevPlanner");
-    const userCollection = db.collection("Users");
-    const taskCollection = db.collection("Tasks");
+    // await client.connect();
+    console.log("✅ Connected to MongoDB");
 
-    // 🔹 Create or Update User (Google Sign-in Fix)
+    const database = client.db("DevPlanner");
+    const userCollection = database.collection("Users");
+    const taskCollection = database.collection("Tasks");
+
+    // 🔹 Add a User
     app.post("/users", async (req, res) => {
       try {
         const { name, email, photoUrl } = req.body;
-        if (!email) return res.status(400).json({ message: "Email is required" });
+        if (!name || !email) {
+          return res.status(400).json({ message: "Name and Email are required" });
+        }
 
         const existingUser = await userCollection.findOne({ email });
 
         if (existingUser) {
-          // Update user info if they signed in with Google
-          await userCollection.updateOne({ email }, { $set: { name, photoUrl } });
-          return res.status(200).json({ message: "User updated successfully" });
+          return res.status(400).json({ message: "User already exists" });
         }
 
         const result = await userCollection.insertOne({ name, email, photoUrl });
         res.status(201).json(result);
       } catch (error) {
-        console.error("❌ Error adding user:", error);
+        console.error("Error adding user:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
 
-    // 🔹 Add a Task (Prevent Duplicates)
+    // 🔹 Fetch All Users
+    app.get("/users", async (req, res) => {
+      try {
+        const users = await userCollection.find().toArray();
+        res.status(200).json(users);
+      } catch (error) {
+        console.error("❌ Error fetching users:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // 🔹 Add a Task
     app.post("/tasks", async (req, res) => {
       try {
-        const { userEmail, taskName, description, category } = req.body;
-        if (!userEmail || !taskName) return res.status(400).json({ message: "User email and task name are required" });
+        const newTask = req.body;
+        if (!newTask.userEmail || !newTask.taskName) {
+          return res.status(400).json({ message: "User email and task name are required" });
+        }
 
-        const existingTask = await taskCollection.findOne({ userEmail, taskName });
-        if (existingTask) return res.status(400).json({ message: "Task already exists" });
-
-        const result = await taskCollection.insertOne({ userEmail, taskName, description, category });
+        const result = await taskCollection.insertOne(newTask);
         res.status(201).json(result);
       } catch (error) {
         console.error("❌ Error adding task:", error);
@@ -66,19 +84,72 @@ async function run() {
     app.get("/tasks", async (req, res) => {
       try {
         const { userEmail } = req.query;
-        if (!userEmail) return res.status(400).json({ message: "User email is required" });
+        if (!userEmail) {
+          return res.status(400).json({ message: "User email is required" });
+        }
 
         const tasks = await taskCollection.find({ userEmail }).toArray();
         res.status(200).json(tasks);
       } catch (error) {
-        console.error("Error fetching tasks:", error);
+        console.error("❌ Error fetching tasks:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
 
-    app.listen(port, () => console.log(`DevPlanner server is running on port: ${port}`));
+    // 🔹 Update Task
+    app.put("/tasks/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedTask = req.body;
+        const result = await taskCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedTask }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res.status(404).json({ message: "Task not found or not modified" });
+        }
+
+        res.json(result);
+      } catch (error) {
+        console.error("❌ Error updating task:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // 🔹 Delete Task
+    app.delete("/tasks/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+
+        res.json(result);
+      } catch (error) {
+        console.error("❌ Error deleting task:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // Default Route
+    app.get("/", (req, res) => {
+      res.send("🚀 DevPlanner server is running");
+    });
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    console.error("❌ Error connecting to MongoDB:", error);
   }
 }
 run().catch(console.dir);
+
+// Default Route
+app.get('/', (req, res) => {
+  res.send('server is running');
+});
+
+// Start Server
+app.listen(port, () => {
+  console.log(`server is running on port: ${port}`);
+});
