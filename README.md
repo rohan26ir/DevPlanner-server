@@ -24,11 +24,6 @@ This is the backend service for the DevPlanner Task Management Application. It p
   - Ensures persistence and reordering of tasks within categories
 
 
-## Installation & Setup
-### Prerequisites
-- **Node.js** (v14+ recommended)
-- **MongoDB Atlas or Local MongoDB Instance**
-
 ## Folder Structure
 ```
 backend/
